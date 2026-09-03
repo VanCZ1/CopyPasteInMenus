@@ -34,26 +34,26 @@ Adds copy-paste functionality to text boxes in menus
 ```
 git clone https://github.com/powerof3/CopyPasteInMenus.git
 cd CopyPasteInMenus
-# pull commonlib /extern to override the path settings
-git submodule init
-# to update submodules to checked-out build (warning, pulling newer versions may result in build problems)
-git submodule update --recursive
+git submodule update --init --recursive
 ```
 
-### SSE
+### SSE (1.5.97)
 ```
-cmake --preset vs2022-windows-vcpkg-se
-cmake --build build --config Release
+cmake --preset vs2022-se
+cmake --build --preset vs2022-se
 ```
-### AE
+### AE (1.6.1170+)
 ```
-cmake --preset vs2022-windows-vcpkg-ae
-cmake --build buildae --config Release
+cmake --preset vs2022-ae
+cmake --build --preset vs2022-ae
 ```
 ### VR
 ```
-cmake --preset vs2022-windows-vcpkg-vr
-cmake --build buildvr --config Release
+cmake --preset vs2022-vr
+cmake --build --preset vs2022-vr
 ```
+
+Replace `vs2022` with `vs2026` to build with Visual Studio 2026.
+
 ## License
-[MIT](LICENSE)
+[GPL-3.0](LICENSE)

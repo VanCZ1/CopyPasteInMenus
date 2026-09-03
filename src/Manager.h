@@ -19,7 +19,7 @@ enum class PasteType
 };
 
 class Manager final :
-	public REX::Singleton<Manager>,
+	public REX::TSingleton<Manager>,
 	public RE::BSTEventSink<RE::InputEvent*>
 {
 public:
@@ -29,14 +29,16 @@ public:
 private:
 	RE::BSEventNotifyControl ProcessEvent(RE::InputEvent* const* a_evn, RE::BSTEventSource<RE::InputEvent*>*) override;
 
-	// members
-	std::string   clipboardText;
-	Key           primaryKey{ Key::kLeftControl };
-	Key           secondaryKey{ Key::kV };
-	PasteType     pasteType{ PasteType::kCursor };
-	std::uint32_t inputDelay{ 10 };
-	bool          keyCombo1{ false };
-	bool          keyCombo2{ false };
+	[[nodiscard]] PasteType GetPasteType() const { return static_cast<PasteType>(pasteType.GetValue()); }
 
-	static constexpr const wchar_t* configPath{ L"Data/SKSE/Plugins/po3_CopyPasteInMenus.ini" };
+	// members
+	std::string                     clipboardText;
+	REX::TIniSetting<std::uint32_t> primaryKey{ "CopyPaste", "iPrimaryKey", std::to_underlying(Key::kLeftControl) };
+	REX::TIniSetting<std::uint32_t> secondaryKey{ "CopyPaste", "iSecondaryKey", std::to_underlying(Key::kV) };
+	REX::TIniSetting<std::uint32_t> pasteType{ "CopyPaste", "iPasteType", std::to_underlying(PasteType::kCursor) };
+	REX::TIniSetting<std::uint32_t> inputDelay{ "CopyPaste", "iInputDelay", 10 };
+	bool                            keyCombo1{ false };
+	bool                            keyCombo2{ false };
+
+	static constexpr auto configPath{ R"(Data\SKSE\Plugins\po3_CopyPasteInMenus.ini)"sv };
 };

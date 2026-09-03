@@ -1,5 +1,11 @@
 #include "Manager.h"
 
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#undef ERROR
+#undef GetObject
+
 namespace detail
 {
 	// https://stackoverflow.com/a/14763025
@@ -20,7 +26,7 @@ namespace detail
 
 		// Lock the handle to get the actual text pointer
 		if (const auto pszText = static_cast<const wchar_t*>(GlobalLock(hData)); pszText != nullptr) {
-			text = stl::utf16_to_utf8(pszText).value_or("");
+			REX::UTF16_TO_UTF8(pszText, text);
 		}
 
 		// Release the lock
@@ -96,7 +102,7 @@ namespace detail
 		std::string path;
 		for (const auto& menuPtr : ui->menuStack) {
 			if (auto menu = menuPtr.get(); menu && menu->uiMovie) {
-				if (detail::GetFocusedField(menu->uiMovie.get(), path) && (string::icontains(path, "textField") || string::icontains(path, "TextInput"))) {
+				if (detail::GetFocusedField(menu->uiMovie.get(), path) && (REX::STR::ICONTAINS(path, "textField") || REX::STR::ICONTAINS(path, "TextInput"))) {
 					return menu->uiMovie.get();
 				}
 			}
@@ -108,23 +114,17 @@ namespace detail
 
 void Manager::Register()
 {
-	logger::info("{:*^30}", "EVENTS");
+	REX::INFO("{:*^30}", "EVENTS");
 	RE::BSInputDeviceManager::GetSingleton()->AddEventSink(GetSingleton());
 }
 
 void Manager::LoadSettings()
 {
-	CSimpleIniA ini;
-	ini.SetUnicode();
+	const auto store = REX::FIniSettingStore::GetSingleton();
+	store->Init(configPath.data(), "");
 
-	ini.LoadFile(configPath);
-
-	ini::get_value(ini, primaryKey, "CopyPaste", "iPrimaryKey", ";Keyboard scan codes : https://wiki.nexusmods.com/index.php/DirectX_Scancodes_And_How_To_Use_Them\n;Default: Left Ctrl");
-	ini::get_value(ini, secondaryKey, "CopyPaste", "iSecondaryKey", ";Default: V");
-	ini::get_value(ini, pasteType, "CopyPaste", "iPasteType", ";0 - insert text at cursor position | 1 - append text");
-	ini::get_value(ini, inputDelay, "CopyPaste", "iInputDelay", ";Delay between key press and text paste (in milliseconds). Increase if V is not removed when pasting text.");
-
-	(void)ini.SaveFile(configPath);
+	store->Load();
+	store->Save();
 }
 
 RE::BSEventNotifyControl Manager::ProcessEvent(RE::InputEvent* const* a_evn, RE::BSTEventSource<RE::InputEvent*>*)
@@ -175,7 +175,7 @@ RE::BSEventNotifyControl Manager::ProcessEvent(RE::InputEvent* const* a_evn, RE:
 					std::string oldText;
 					detail::ReadFromTextField(view, path, oldText);
 
-					if (pasteType == PasteType::kEndOfText) {
+					if (GetPasteType() == PasteType::kEndOfText) {
 						auto newText = oldText + clipboardText;
 						if (!oldText.empty()) {
 							newText.erase(oldText.length() - 1, 1);
